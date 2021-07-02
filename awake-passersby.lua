@@ -176,12 +176,12 @@ local function step()
         engine.noteOn(1, freq, vel)
       elseif params:get("output") == 4 then
         crow.output[1].volts = (note_num-60)/12
-        crow.output[2].execute()
+        crow.output[2]()
       elseif params:get("output") == 5 then
         crow.ii.jf.play_note((note_num-60)/12,5)
       elseif params:get("output") == 6 then
         crow.output[1].volts = (note_num-60)/12
-        crow.output[2].execute()
+        crow.output[2]()
         crow.ii.jf.play_note((note_num-60)/12,5)
       end
       
@@ -198,7 +198,7 @@ local function step()
     end
   end
 
-  if params:get("crow_clock_out") == 2 then crow.output[4]:execute() end
+  if params:get("crow_clock_out") == 2 then crow.output[4]() end
 
   if g then
     gridredraw()
@@ -245,6 +245,11 @@ local function crow_init()
   
 end
 
+norns.crow.add = function()
+  norns.crow.init() -- initialize norns system & clear crow
+  crow_init() -- initialize script settings for crow
+end
+
 function init()
   for i = 1, #MusicUtil.SCALES do
     table.insert(scale_names, string.lower(MusicUtil.SCALES[i].name))
@@ -271,8 +276,7 @@ function init()
   params:set("bpm", 91)
   
   params:add{type = "trigger", id = "clear_crow", name = "reset/clear crow [K3]", action = function()
-    crow.clear()
-    crow.reset()
+    norns.crow.init() -- resets norns.crow & triggers crow.reset()
   end}
   
   notes_off_metro.event = all_notes_off
@@ -288,7 +292,6 @@ function init()
       end
     end}
   params:add{type = "trigger", id = "reset_jf_ii", name = "reset JF [K3]", action = function()
-    crow.ii.pullup(false)
     crow.ii.jf.mode(0)
     end}
   params:add{type = "number", id = "midi_out_device", name = "midi out device",
